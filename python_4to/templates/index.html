@@ -1,0 +1,125 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Creativa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <img src="{{ url_for('static', filename='uploads/descarga.jpg') }}">
+</head>
+<body>
+<div class="app-container">
+    
+    <!-- Panel principal (Canvas) -->
+    <div class="canvas-area">
+        <h2>Tu espacio creativo</h2>
+        <div id="canvas-display">
+            <p>Sube un archivo o escribe tu texto aquí...</p>
+        </div>
+        <form action="/analizar" method="POST" enctype="multipart/form-data">
+            <input type="file" name="archivo" accept="image/*,.txt,.docx,.pdf">
+            <textarea name="texto" placeholder="Escribe o pega tu contenido..."></textarea>
+            <button type="submit">Analizar con IA</button>
+        </form>
+    </div>
+
+    <!-- Panel lateral IA -->
+    <div class="sidebar">
+        <h3>Herramientas IA</h3>
+        <button onclick="usarIA('parafrasear')">Parafrasear</button>
+        <button onclick="usarIA('gramatica')">Revisión gramatical</button>
+        <button onclick="usarIA('resumen')">Resumir</button>
+        <button onclick="usarIA('creativo')">Texto creativo</button>
+    </div>
+</div>
+
+
+<h2>Dibujar</h2>
+<canvas id="canvas" width="500" height="400" style="border:1px solid black;"></canvas>
+<br>
+<button id="guardarDibujo">Enviar Dibujo para Análisis</button>
+
+<h1>Analizador de Planos con IA</h1>
+
+    <!-- Canvas de dibujo -->
+    <canvas id="drawingCanvas" width="500" height="400"></canvas><br>
+    <button id="clearBtn">Borrar</button>
+    <button id="analyzeBtn">Analizar Plano</button>
+
+    <!-- Resultados -->
+    <div id="result">
+        <h3>Resultados del Análisis:</h3>
+        <p id="analysisText">Dibuja o carga tu plano para comenzar...</p>
+        <img id="correctedImage" style="max-width: 100%; display: none;">
+    </div>
+
+    {% if imagen_corregida %}
+<div>
+    <h3>Plano Corregido</h3>
+    <img src="{{ imagen_corregida }}" alt="Plano corregido" style="max-width:100%;">
+</div>
+{% endif %}
+</div>
+
+
+<script>
+    const canvas = document.getElementById("canvas", 'drawingCanvas');
+    const ctx = canvas.getContext("2d");
+    let dibujando = false;
+
+    canvas.addEventListener("mousedown", () => dibujando = true);
+    canvas.addEventListener("mouseup", () => dibujando = false);
+    canvas.addEventListener("mousemove", dibujar);
+
+    function dibujar(e) {
+        if (!dibujando) return;
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "black";
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+    }
+
+    document.getElementById("guardarDibujo").addEventListener("click", () => {
+        const dataURL = canvas.toDataURL("image/png");
+        fetch("/guardar_dibujo", {
+            method: "POST",
+            body: JSON.stringify({ imagen: dataURL }),
+            headers: { "Content-Type": "application/json" }
+        }).then(res => window.location.href = "/resultado");
+    });
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const imageData = canvas.toDataURL('image/png');
+
+            fetch('/analyze_drawing', {
+                method: 'POST',
+                body: JSON.stringify({ image: imageData }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('analysisText').innerText = data.text;
+                if (data.corrected_image) {
+                    const img = document.getElementById('correctedImage');
+                    img.src = data.corrected_image;
+                    img.style.display = 'block';
+                }
+            });
+        });
+</script>
+
+<script>
+function usarIA(tipo) {
+    alert(`Usando IA para: ${tipo}`);
+}
+</script>
+</body>
+</html>

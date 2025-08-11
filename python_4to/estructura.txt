@@ -1,0 +1,20 @@
+/multiusos_ai/
+│
+├── main.py
+├── ui/
+│   ├── layout.py         ← interfaz principal
+│   └── tools_panel.py    ← herramientas laterales
+│
+├── core/
+│   ├── asistente.py
+│   ├── drawing_helper.py
+│   ├── excel_creator.py   ← futura función
+│   ├── gantt_generator.py ← futura función
+│
+├── assets/
+│   └── avatar_image.png
+│
+├── avatar/
+│   └── avatar.py
+│
+├── requirements.txt
